@@ -37,7 +37,9 @@ function parseInput() {
   text = text.replace(/^[^\w]+|[^\w]+$/g, '').trim();
 
   // Handle 2-digit year rule
-  const currentYear = new Date().getFullYear();
+  const currentYear = Number(
+    Intl.DateTimeFormat('en', { year: 'numeric' }).format()
+  );
   const lastTwo = currentYear % 100;
   const num = parseInt(digits, 10);
 
