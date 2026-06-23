@@ -7,6 +7,129 @@
   <title>ADS Quick Search – Qiushi Chris Tian</title>
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="assets/icon.png" type="image/png">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .page-title {
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 2rem;
+      /* was 0.2rem before, now more breathing room */
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1.2rem;
+      /* adds distance between subtitle and input */
+    }
+
+    input {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .warning-message {
+      color: #cc0000;
+      font-size: 0.85rem;
+      margin-top: -0.5rem;
+      height: 1rem;
+      /* reserves space to avoid layout shift */
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 20px;
+      /* a bit of distance from bottom */
+      width: 100%;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: #004080;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 64, 128, 0.3);
+      transition: border-color 0.2s;
+    }
+
+    .footer a:hover {
+      border-color: rgba(0, 64, 128, 0.6);
+    }
+
+    .title-wrapper {
+      display: flex;
+      align-items: center;
+      /* vertically centers logo with title */
+      justify-content: center;
+      /* center horizontally on page */
+      gap: 0.4rem;
+      /* was 0.8, spacing between logo and text */
+      margin-bottom: 0.0rem;
+      /* was 2, space below title and search box */
+    }
+
+    .logo {
+      width: 48px;
+      /* was 48px before */
+      height: 48px;
+      /* was 48px before */
+      margin-bottom: 1rem;
+    }
+
+    /* Responsive: stack logo above title on narrow screens */
+    @media (max-width: 480px) {
+      .title-wrapper {
+        flex-direction: column;
+        /* stack vertically */
+        gap: 0.4rem;
+        /* smaller spacing when stacked */
+      }
+    }
+
+    .bookmark-instruction {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 0.3rem;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
@@ -32,7 +155,73 @@
       website</a>
   </footer>
 
-  <script src="assets/script.js"></script>
+  <script>
+    document.getElementById('searchButton').addEventListener('click', parseInput);
+    document.getElementById('searchInput').addEventListener('keypress', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        parseInput();
+      }
+    });
+
+    function parseInput() {
+      const inputField = document.getElementById('searchInput');
+      const warning = document.getElementById('warningMessage');
+      const input = inputField.value.trim();
+
+      // Clear any previous warning
+      warning.textContent = '';
+
+      // If nothing is entered, show warning and return
+      if (!input) {
+        warning.textContent = 'Please enter first author name';
+        return;
+      }
+
+      // Remove plus signs
+      const cleaned = input.replace(/\+/g, '');
+
+      // Separate digit part and text part
+      const match = cleaned.match(/(\d+)/);
+      let digits = '';
+      let text = cleaned;
+
+      if (match) {
+        digits = match[1];
+        text = cleaned.replace(match[0], '').trim();
+      }
+
+      // Remove leading/trailing punctuation
+      text = text.replace(/^[^\w]+|[^\w]+$/g, '').trim();
+
+      // Handle 2-digit year rule
+      const currentYear = new Date().getFullYear();
+      const lastTwo = currentYear % 100;
+      const num = parseInt(digits, 10);
+
+      if (digits.length === 2 && !isNaN(num)) {
+        digits = num <= lastTwo ? `20${digits}` : `19${digits}`;
+      }
+
+      // Build the target URL
+      const baseUrl = "https://ui.adsabs.harvard.edu/search/filter_database_fq_database=AND&filter_database_fq_database=database%3A%22astronomy%22&filter_property_fq_property=AND&filter_property_fq_property=property%3A%22refereed%22&fq=%7B!type%3Daqp%20v%3D%24fq_database%7D&fq=%7B!type%3Daqp%20v%3D%24fq_property%7D&fq_database=(database%3A%22astronomy%22)&fq_property=(property%3A%22refereed%22)&p_=0";
+      let query = `&q=first_author%3A%22${encodeURIComponent(text)}%22`;
+      if (digits) {
+        query += `%20year%3A${encodeURIComponent(digits)}`;
+      }
+      const fullUrl = baseUrl + query;
+
+      // // Display results
+      // resultDiv.innerHTML = `
+      //   Original: ${input}
+      //   Text part: ${text || '(none)'}
+      //   Digits part: ${digits || '(none)'}
+      // `;
+
+      // Redirect
+      window.location.href = fullUrl;
+    }
+  </script>
 </body>
 
 </html>
